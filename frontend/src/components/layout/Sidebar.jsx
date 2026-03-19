@@ -60,7 +60,13 @@ export default function Sidebar() {
                         Upgrade Now
                     </button>
                 </div>
-                <button className="flex items-center gap-3 px-4 py-3 w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200 group">
+                <button
+                    onClick={() => {
+                        localStorage.removeItem('token');
+                        window.location.href = '/login';
+                    }}
+                    className="flex items-center gap-3 px-4 py-3 w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200 group"
+                >
                     <LogOut className="w-5 h-5" />
                     <span className="font-medium group-hover:block">Logout</span>
                 </button>
