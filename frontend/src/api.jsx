@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // Create a centralized Axios instance
 const api = axios.create({
-  // Switched to 8001 to resolve Port 8000 conflicts on user machine
-  baseURL: 'http://127.0.0.1:8001',
+  // Use environment variable for deployment, fallback to local
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8001',
   timeout: 120000,
 });
 
