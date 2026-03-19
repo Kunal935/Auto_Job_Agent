@@ -12,4 +12,6 @@ python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
 google-genai
+beautifulsoup4
 openpyxl
+lxml
