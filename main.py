@@ -64,16 +64,39 @@ app.include_router(cover_letter.router)
 app.include_router(auth.router)
 
 # -----------------------------
-# 5️⃣ DB initialization
+# 5️⃣ DB initialization & Default User
 # -----------------------------
+from passlib.context import CryptContext
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 @app.on_event("startup")
 def startup_event():
-    logger.info("Creating all database tables (if not exist)...")
+    from db.database import SessionLocal
+    from db import models, crud
+    
+    logger.info("Initializing database...")
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("DB tables created successfully.")
+        
+        # Create default admin user if it doesn't exist
+        db = SessionLocal()
+        admin_email = "admin@autojobagent.com"
+        existing_user = crud.get_user_by_email(db, admin_email)
+        
+        if not existing_user:
+            logger.info("Creating default admin user...")
+            hashed_password = pwd_context.hash("admin123")
+            crud.create_user(db, {
+                "email": admin_email,
+                "hashed_password": hashed_password,
+                "resume_parsed": 0
+            })
+            logger.info("Default user 'admin@autojobagent.com' created (Pass: admin123).")
+        
+        db.close()
+        logger.info("DB tables and default user setup successful.")
     except Exception as e:
-        logger.error(f"DB creation failed: {e}")
+        logger.error(f"DB startup failed: {e}")
 
 # -----------------------------
 # 6️⃣ Default Route
