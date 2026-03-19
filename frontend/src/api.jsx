@@ -30,6 +30,10 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
+      if (error.response.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
       let message = error.response.data?.detail || error.response.data?.error || 'Server error';
       if (typeof message !== 'string') message = JSON.stringify(message);
       console.error(`[API Error ${error.response.status}]:`, message);
