@@ -42,8 +42,10 @@ async def upload_resume(
     Upload a resume file (PDF/DOCX), extract structured data, and save in DB.
     STRICT RULE: Only one parse allowed per user.
     """
-    # 1. Check if user already parsed a resume
-    if current_user.resume_parsed:
+    # 1. Check if user already parsed a resume (Bypass for admin/creator)
+    isAdmin = current_user.email == "admin@autojobagent.com"
+    
+    if current_user.resume_parsed and not isAdmin:
         return JSONResponse(
             content={"error": "❌ You have already used your free resume parsing. Please upgrade your plan to continue."},
             status_code=status.HTTP_403_FORBIDDEN
@@ -82,8 +84,9 @@ async def upload_resume(
             "raw_text": raw_text
         }, user_id=current_user.id)
         
-        # 2. Mark user as having parsed their resume
-        crud.update_user_resume_parsed(db, current_user.id)
+        # 2. Mark user as having parsed their resume (Skip for admin)
+        if not isAdmin:
+            crud.update_user_resume_parsed(db, current_user.id)
         
         logging.info(f"Resume saved in DB: ID {db_resume.id} for user {current_user.id}")
     except Exception as e:
