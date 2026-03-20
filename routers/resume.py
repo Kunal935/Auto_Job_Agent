@@ -14,12 +14,12 @@ from sqlalchemy.orm import Session
 import os
 import shutil
 import logging
-from app.core.resume_parser import extract_resume_llm, read_file
-from app.db.database import get_db
-from app.db import crud
+from core.resume_parser import extract_resume_llm, read_file
+from db.database import get_db
+from db import crud
 
-from app.routers.auth import get_current_user
-from app.db.models import User
+from routers.auth import get_current_user
+from db.models import User
 
 router = APIRouter(
     prefix="/resume",
