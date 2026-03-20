@@ -4,8 +4,8 @@ import time
 from typing import Dict, Any
 
 from google import genai
-from app.core.resume_parser import extract_resume_llm, read_file, clean_text
-from app.core.job_matching import calculate_skill_match
+from core.resume_parser import extract_resume_llm, read_file, clean_text
+from core.job_matching import calculate_skill_match
 
 
 # ==============================
