@@ -72,8 +72,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @app.on_event("startup")
 def startup_event():
-    from app.db.database import SessionLocal
-    from app.db import models, crud
+    from db.database import SessionLocal
+    from db import models, crud
     
     logger.info("Initializing database...")
     try:
