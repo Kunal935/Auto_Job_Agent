@@ -10,9 +10,9 @@ Description:
 from fastapi import APIRouter, Depends, Form, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from app.db.database import get_db
-from app.db import crud
-from app.core.job_matching import calculate_skill_match
+from db.database import get_db
+from db import crud
+from core.job_matching import calculate_skill_match
 
 router = APIRouter(
     prefix="/match",
