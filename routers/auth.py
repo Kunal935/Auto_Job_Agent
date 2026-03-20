@@ -29,10 +29,12 @@ class Token(BaseModel):
     token_type: str
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    # Simplified string comparison as requested
+    return plain_password == hashed_password
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    # Just return as plain text for development
+    return password
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -44,22 +46,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    user = crud.get_user_by_email(db, email=email)
-    if user is None:
-        raise credentials_exception
+async def get_current_user(db: Session = Depends(get_db)):
+    # Bypassing auth: always return the admin user
+    user = crud.get_user_by_email(db, email="admin@autojobagent.com")
     return user
 
 @router.post("/signup")
