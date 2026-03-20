@@ -12,9 +12,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 # Import routers
 
-from app.routers import resume, jobs, match, cover_letter, auth
-from app.core import job_fetcher
-from app.db.database import Base, engine
+from routers import resume, jobs, match, cover_letter, auth
+from core import job_fetcher
+from db.database import Base, engine
 
 # -----------------------------
 # 1️⃣ Logging setup
