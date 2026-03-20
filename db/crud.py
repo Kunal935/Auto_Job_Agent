@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.db import models
+from db import models
 
 
 ### User CRUD ###
