@@ -1,5 +1,5 @@
 import json
-from app.core.resume_parser import extract_resume_llm
+from core.resume_parser import extract_resume_llm
 
 # Skill aliases / synonyms mapping
 SKILL_ALIASES = {
