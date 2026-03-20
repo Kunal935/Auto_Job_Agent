@@ -12,63 +12,18 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import { ResumeProvider } from './context/ResumeContext';
 
 // Mock Auth Guard
-// Mock Auth Guard - Bypassed for development
-const ProtectedRoute = ({ children }) => {
-  // Always allow access as requested
-  return <DashboardLayout>{children}</DashboardLayout>;
-};
-
 function App() {
   return (
     <ErrorBoundary>
       <ResumeProvider>
         <Router>
           <Routes>
-            {/* Auth Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-
-            {/* Dashboard Routes wrapped in Layout and Guard */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Overview />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/resume"
-              element={
-                <ProtectedRoute>
-                  <ResumeUpload />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/matches"
-              element={
-                <ProtectedRoute>
-                  <JobMatches />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/cover-letter"
-              element={
-                <ProtectedRoute>
-                  <CoverLetter />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
+            {/* Direct Dashboard Routes (No Auth) */}
+            <Route path="/" element={<DashboardLayout><Overview /></DashboardLayout>} />
+            <Route path="/resume" element={<DashboardLayout><ResumeUpload /></DashboardLayout>} />
+            <Route path="/matches" element={<DashboardLayout><JobMatches /></DashboardLayout>} />
+            <Route path="/cover-letter" element={<DashboardLayout><CoverLetter /></DashboardLayout>} />
+            <Route path="/settings" element={<DashboardLayout><Settings /></DashboardLayout>} />
 
             {/* Catch all */}
             <Route path="*" element={<Navigate to="/" replace />} />
