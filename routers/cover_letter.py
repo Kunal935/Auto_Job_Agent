@@ -16,7 +16,7 @@ from typing import Dict, Literal
 import os
 import shutil
 import logging
-from core.cover_letter_gen import generate_cover_letter
+from app.core.cover_letter_gen import generate_cover_letter
 
 # -----------------------------
 # Setup
@@ -48,18 +48,8 @@ async def generate_cover(
     Validates level/word limits against premium status.
     """
     
-    # 1️⃣ Validation Logic
-    if experience_level == "professional" and not is_premium:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="The 'Professional' experience level is a Premium-only feature."
-        )
-    
-    if word_limit > 600 and not is_premium:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Generating letters longer than 600 words requires a Premium subscription."
-        )
+    # 1️⃣ Validation Logic (Removed for full access)
+    pass
 
     # 2️⃣ Save uploaded file temporarily
     file_path = os.path.join(UPLOAD_DIR, resume_file.filename)
