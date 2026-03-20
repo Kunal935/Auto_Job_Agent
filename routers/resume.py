@@ -14,12 +14,12 @@ from sqlalchemy.orm import Session
 import os
 import shutil
 import logging
-from core.resume_parser import extract_resume_llm, read_file
-from db.database import get_db
-from db import crud
+from app.core.resume_parser import extract_resume_llm, read_file
+from app.db.database import get_db
+from app.db import crud
 
-from routers.auth import get_current_user
-from db.models import User
+# from app.routers.auth import get_current_user
+# from app.db.models import User
 
 router = APIRouter(
     prefix="/resume",
@@ -35,21 +35,15 @@ logging.basicConfig(level=logging.INFO)
 @router.post("/upload")
 async def upload_resume(
     resume_file: UploadFile = File(...), 
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     """
     Upload a resume file (PDF/DOCX), extract structured data, and save in DB.
-    STRICT RULE: Only one parse allowed per user.
+    NO LOGIN REQUIRED.
     """
-    # 1. Check if user already parsed a resume (Bypass for admin/creator)
-    isAdmin = current_user.email == "admin@autojobagent.com"
-    
-    if current_user.resume_parsed and not isAdmin:
-        return JSONResponse(
-            content={"error": "❌ You have already used your free resume parsing. Please upgrade your plan to continue."},
-            status_code=status.HTTP_403_FORBIDDEN
-        )
+    # 1. Bypass all user limits
+    # Just save directly
+    pass
 
     file_path = os.path.join(UPLOAD_DIR, resume_file.filename)
     try:
@@ -82,13 +76,9 @@ async def upload_resume(
             "phone": data.get("phone", ""),
             "skills": ",".join(data.get("skills", [])) if isinstance(data.get("skills"), list) else str(data.get("skills", "")),
             "raw_text": raw_text
-        }, user_id=current_user.id)
+        }, user_id=1) # Hardcoded ID since auth is removed
         
-        # 2. Mark user as having parsed their resume (Skip for admin)
-        if not isAdmin:
-            crud.update_user_resume_parsed(db, current_user.id)
-        
-        logging.info(f"Resume saved in DB: ID {db_resume.id} for user {current_user.id}")
+        logging.info(f"Resume saved in DB: ID {db_resume.id}")
     except Exception as e:
         logging.error(f"DB error: {e}")
         return JSONResponse(
