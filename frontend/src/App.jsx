@@ -12,9 +12,9 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import { ResumeProvider } from './context/ResumeContext';
 
 // Mock Auth Guard
+// Mock Auth Guard - Bypassed for development
 const ProtectedRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem('token');
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  // Always allow access as requested
   return <DashboardLayout>{children}</DashboardLayout>;
 };
 
