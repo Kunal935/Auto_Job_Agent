@@ -5,7 +5,7 @@ const getBaseURL = () => {
   if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL;
 
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  return isLocal ? 'http://127.0.0.1:8001' : 'https://auto-job-agent-1.onrender.com';
+  return isLocal ? 'http://127.0.0.1:8000' : 'https://auto-job-agent-1.onrender.com';
 };
 
 const api = axios.create({
