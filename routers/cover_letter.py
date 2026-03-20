@@ -16,7 +16,7 @@ from typing import Dict, Literal
 import os
 import shutil
 import logging
-from app.core.cover_letter_gen import generate_cover_letter
+from core.cover_letter_gen import generate_cover_letter
 
 # -----------------------------
 # Setup
