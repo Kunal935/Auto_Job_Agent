@@ -1,9 +1,15 @@
 import axios from 'axios';
 
-// Create a centralized Axios instance
+// Dynamic Base URL detection
+const getBaseURL = () => {
+  if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL;
+
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  return isLocal ? 'http://127.0.0.1:8001' : 'https://autojobagent-api.onrender.com';
+};
+
 const api = axios.create({
-  // Use environment variable for deployment, fallback to local
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8001',
+  baseURL: getBaseURL(),
   timeout: 120000,
 });
 
