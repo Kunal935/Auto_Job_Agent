@@ -7,8 +7,8 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from app.db import crud, models
-from app.db.database import get_db
+from db import crud, models
+from db.database import get_db
 
 # JWT Settings
 SECRET_KEY = os.getenv("SECRET_KEY", "your-default-dev-key")
