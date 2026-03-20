@@ -1,65 +1,95 @@
-# routers/match.py
+
 """
-Router: Job-Resume Matching
+Router: Resume Upload & Extraction
 Author: Kunal
 Description:
-    - Match resume skills against job skills
-    - Return matching score and details
+    - Upload resumes (PDF/DOCX)
+    - Extract structured data using LLM
+    - Store in DB
 """
 
-from fastapi import APIRouter, Depends, Form, status
+from fastapi import APIRouter, UploadFile, File, status, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+import os
+import shutil
+import logging
+from core.resume_parser import extract_resume_llm, read_file
 from db.database import get_db
 from db import crud
-from core.job_matching import calculate_skill_match
+
+# from app.routers.auth import get_current_user
+# from app.db.models import User
 
 router = APIRouter(
-    prefix="/match",
-    tags=["Match"]
+    prefix="/resume",
+    tags=["Resume"]
 )
 
-@router.post("/resume-job")
-def match_resume_job(
-    resume_id: int = Form(...),
-    job_id: int = Form(...),
+# Temp upload folder
+UPLOAD_DIR = ".temp_uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+logging.basicConfig(level=logging.INFO)
+
+@router.post("/upload")
+async def upload_resume(
+    resume_file: UploadFile = File(...), 
     db: Session = Depends(get_db)
 ):
     """
-    Match a resume against a job by IDs and return score
+    Upload a resume file (PDF/DOCX), extract structured data, and save in DB.
+    NO LOGIN REQUIRED.
     """
-    resume = crud.get_resume_by_id(db, resume_id)
-    job = crud.get_job_by_id(db, job_id)
+    # 1. Bypass all user limits
+    # Just save directly
+    pass
 
-    if not resume:
-        return JSONResponse({"error": "Resume not found"}, status_code=status.HTTP_404_NOT_FOUND)
-    if not job:
-        return JSONResponse({"error": "Job not found"}, status_code=status.HTTP_404_NOT_FOUND)
+    file_path = os.path.join(UPLOAD_DIR, resume_file.filename)
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(resume_file.file, buffer)
+        logging.info(f"Resume uploaded: {file_path}")
+    except Exception as e:
+        logging.error(f"Failed to save resume: {e}")
+        return JSONResponse(
+            content={"error": f"Failed to save resume: {e}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
-    # Skills from DB
-    resume_skills = [s.strip() for s in resume.skills.split(",") if s.strip()]
-    job_skills = [s.strip() for s in job.description.split(",") if s.strip()]
+    # Read file content
+    raw_text = read_file(file_path)
+    if not raw_text:
+        return JSONResponse(
+            content={"error": "Failed to read resume content. Check file format."},
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
 
-    from core.job_matching import calculate_skill_match
-    match_report = calculate_skill_match(resume_skills, job_skills)
+    # Extract structured data
+    data = extract_resume_llm(raw_text)
 
-    return {"resume_id": resume_id, "job_id": job_id, "match": match_report}
+    # Save in DB
+    try:
+        db_resume = crud.create_resume(db, {
+            "name": data.get("name", ""),
+            "email": data.get("email", ""),
+            "phone": data.get("phone", ""),
+            "skills": ",".join(data.get("skills", [])) if isinstance(data.get("skills"), list) else str(data.get("skills", "")),
+            "raw_text": raw_text
+        }, user_id=1) # Hardcoded ID since auth is removed
+        
+        logging.info(f"Resume saved in DB: ID {db_resume.id}")
+    except Exception as e:
+        logging.error(f"DB error: {e}")
+        return JSONResponse(
+            content={"error": f"DB error: {e}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    finally:
+        # Cleanup
+        try:
+            os.remove(file_path)
+        except:
+            pass
 
-
-@router.post("/detailed-insight")
-def get_detailed_insight(
-    resume_id: int = Form(...),
-    job_description: str = Form(...),
-    db: Session = Depends(get_db)
-):
-    """
-    Get detailed AI analysis for a specific job description
-    """
-    resume = crud.get_resume_by_id(db, resume_id)
-    if not resume:
-        return JSONResponse({"error": "Resume not found"}, status_code=status.HTTP_404_NOT_FOUND)
-
-    from app.core.job_matching import generate_detailed_match_report
-    insight = generate_detailed_match_report(resume.raw_text, job_description)
-
-    return insight
+    return {"message": "Resume uploaded and parsed successfully", "resume_id": db_resume.id, "data": data}
