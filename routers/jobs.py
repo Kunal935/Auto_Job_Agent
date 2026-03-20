@@ -8,13 +8,13 @@ from fastapi import APIRouter, status, Depends, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import Optional, List
-from app.db.database import get_db
-from app.db import crud, models
-from app.db.models import Job, Resume, User
-from app.routers.auth import get_current_user
+from db.database import get_db
+from db import crud, models
+from db.models import Job, Resume, User
+from routers.auth import get_current_user
 
 # ⬇ Only real functions available in core.job_fetcher
-from app.core.job_fetcher import (
+from core.job_fetcher import (
     fetch_all_jobs,
     fetch_arbeitnow,
     fetch_remoteok,
