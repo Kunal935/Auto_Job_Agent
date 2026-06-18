@@ -2,9 +2,16 @@ import axios from 'axios';
 
 // Dynamic Base URL detection
 const getBaseURL = () => {
-  if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL;
+  const envURL = import.meta.env.VITE_API_BASE_URL;
+
+  // Production me localhost env accidentally set ho jaaye to ignore karo
+  if (envURL && !/^https?:\/\/(localhost|127\.0\.0\.1)/.test(envURL)) {
+    return envURL;
+  }
 
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (isLocal) return 'http://localhost:8001';
+
   return 'https://auto-job-agent-1.onrender.com';
 };
 
@@ -13,7 +20,6 @@ const api = axios.create({
   timeout: 120000,
 });
 
-// Request interceptor for JWT token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -28,7 +34,6 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for centralized error handling
 api.interceptors.response.use(
   (response) => {
     console.log(`[API Success] ${response.config.method.toUpperCase()} ${response.config.url}:`, response.data);
@@ -40,29 +45,39 @@ api.interceptors.response.use(
       if (typeof message !== 'string') message = JSON.stringify(message);
       console.error(`[API Error ${error.response.status}]:`, message);
       return Promise.reject({ message, status: error.response.status });
-    } else if (error.request) {
-      console.error('[API Network Error]: No response was received. Possible causes: Backend not running, Port mismatch, or CORS block.', error.request);
-      return Promise.reject({ message: 'Network error: Backend unreachable. Please check if your terminal shows uvicorn is running on port 8001.' });
     }
+
+    if (error.request) {
+      console.error('[API Network Error]: No response was received.', error.request);
+      return Promise.reject({
+        message: 'Network error: Backend unreachable. Check Render backend URL / Vercel env VITE_API_BASE_URL.',
+      });
+    }
+
     return Promise.reject({ message: error.message });
   }
 );
 
 export const jobApi = {
-  // GET /jobs/recent (Aggregate matches)
-  getMatches: (skills) => api.get('/jobs/recent', { params: { skills } }),
+  // GET /jobs/recent?skills=&source=&location=&limit=
+  getMatches: (skills = '', source = 'all', location = 'India', limit = 24) =>
+    api.get('/jobs/recent', {
+      params: {
+        skills,
+        source,
+        location,
+        limit,
+      },
+    }),
 
-  // GET /jobs/{id}
   getJobDetail: (id) => api.get(`/jobs/${id}`),
 
-  // POST /resume/upload
   uploadResume: (file) => {
     const formData = new FormData();
-    formData.append('resume_file', file); // Backend expects 'resume_file'
+    formData.append('resume_file', file);
     return api.post('/resume/upload', formData);
   },
 
-  // POST /cover_letter/generate
   generateCoverLetter: (file, jobDescription, targetJob, tone, wordLimit, experienceLevel, isPremium) => {
     const formData = new FormData();
     formData.append('resume_file', file);
@@ -75,7 +90,6 @@ export const jobApi = {
     return api.post('/cover_letter/generate', formData);
   },
 
-  // POST /match/detailed-insight
   getDetailedInsight: (resumeId, jobDescription) => {
     const formData = new FormData();
     formData.append('resume_id', resumeId);
