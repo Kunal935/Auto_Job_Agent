@@ -92,7 +92,7 @@ def recent_jobs(
     if last_resume and last_resume.skills:
         user_skills = [s.strip() for s in last_resume.skills.split(",") if s.strip()]
 
-    from app.core.job_matching import calculate_skill_match
+    from core.job_matching import calculate_skill_match
     
     for job in jobs:
         required = job.get("skills_required", [])
